@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Code Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Se incluye la librería QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* Estilos generales */
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f4f4f4;
+    }
+    .header {
+      background-color: #ffffff;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .generator-section {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .generator-section input[type="text"] {
+      width: 80%;
+      max-width: 500px;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+    .generator-section input[type="text"]:focus {
+      border-color: #5b9bd5;
+      outline: none;
+    }
+    .generator-section button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #5b9bd5;
+      color: #fff;
+      cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.3s;
+    }
+    .generator-section button:hover {
+      background-color: #4a8ac2;
+    }
+    #qrcode {
+      margin: 20px 0;
+    }
+    .download-button {
+      margin-bottom: 20px;
+    }
+    /* Estilos para el Modal */
+    .modal {
+      display: none; /* Se oculta por defecto */
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+    .modal-content h2 {
+      margin-top: 0;
+    }
+    .modal-content select {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    .modal-buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.3s;
+    }
+    .modal-buttons button.download {
+      background-color: #5b9bd5;
+      color: #fff;
+    }
+    .modal-buttons button.download:hover {
+      background-color: #4a8ac2;
+    }
+    .modal-buttons button.cancel {
+      background-color: #ccc;
+      color: #333;
+    }
+    .modal-buttons button.cancel:hover {
+      background-color: #bbb;
+    }
+    .close-modal {
+      position: absolute;
+      right: 10px;
+      top: 5px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .generator-section input[type="text"] {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Encabezado -->
+  <div class="header">
+    <h1>QR Code Generator</h1>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="container">
+    <div class="generator-section">
+      <input type="text" id="urlInput" placeholder="Ingresa el enlace o URL de una imagen">
+      <button onclick="generateQR()">Generar QR</button>
+      <div id="qrcode"></div>
+      <button class="download-button" onclick="showDownloadModal()">Descargar QR</button>
+    </div>
+  </div>
+
+  <!-- Modal para seleccionar el formato de descarga -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <h2>Selecciona el formato de descarga</h2>
+      <select id="formatSelect">
+        <option value="image/png">PNG</option>
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/webp">WEBP</option>
+      </select>
+      <div class="modal-buttons">
+        <button class="download" onclick="downloadQR()">Descargar</button>
+        <button class="cancel" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var qr;
+
+    // Función para generar el código QR
+    function generateQR() {
+      var url = document.getElementById("urlInput").value.trim();
+      if (url === "") {
+        alert("Por favor, introduce un enlace válido.");
+        return;
+      }
+      // Limpiar el contenedor (por si ya existe un QR)
+      document.getElementById("qrcode").innerHTML = "";
+      
+      // Generar el código QR
+      qr = new QRCode(document.getElementById("qrcode"), {
+        text: url,
+        width: 256,
+        height: 256,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+      });
+    }
+
+    // Muestra el modal para seleccionar el formato
+    function showDownloadModal() {
+      var qrContainer = document.getElementById("qrcode");
+      if (!qrContainer.hasChildNodes()) {
+        alert("Primero genera un código QR.");
+        return;
+      }
+      document.getElementById("modal").style.display = "block";
+    }
+
+    // Cierra el modal
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    // Función para descargar el código QR en el formato seleccionado
+    function downloadQR() {
+      var qrContainer = document.getElementById("qrcode");
+      var canvas = qrContainer.querySelector("canvas");
+      if (canvas) {
+        var format = document.getElementById("formatSelect").value;
+        // Se obtiene la dataURL en el formato seleccionado
+        var dataURL = canvas.toDataURL(format);
+        var a = document.createElement("a");
+        a.href = dataURL;
+        // Se genera el nombre del archivo según el formato, por ejemplo: "codigo_qr.png" o "codigo_qr.jpeg"
+        var extension = format.split("/")[1];
+        a.download = "codigo_qr." + extension;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        closeModal();
+      } else {
+        // En algunos navegadores puede que se genere una imagen en lugar de un canvas
+        var img = qrContainer.querySelector("img");
+        if (img && img.src) {
+          var format = document.getElementById("formatSelect").value;
+          // Si se selecciona un formato distinto a PNG, se informa que sólo se descargará PNG
+          if (format !== "image/png") {
+            alert("El formato seleccionado no está disponible para descarga de imagen. Se descargará en PNG.");
+            format = "image/png";
+          }
+          var a = document.createElement("a");
+          a.href = img.src;
+          a.download = "codigo_qr.png";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          closeModal();
+        } else {
+          alert("No se ha generado ningún código QR para descargar.");
+        }
+      }
+    }
+
+    // Cierra el modal si se hace clic fuera de él
+    window.onclick = function(event) {
+      var modal = document.getElementById("modal");
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+  </script>
+</body>
+</html>
